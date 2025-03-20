@@ -1,1 +1,41 @@
+import streamlit as st
+import pandas as pd
+import openai
+import io
+
+# Configurar la clave de API de OpenAI (debe reemplazarse con una válida)
+openai.api_key = "TU_CLAVE_API"
+
+# Función para leer el archivo Excel
+def leer_excel(archivo):
+    df = pd.read_excel(archivo)
+    return df
+
+# Función para hacer preguntas sobre los datos
+def preguntar_a_gpt(pregunta, df):
+    contexto = f"Estos son los datos del archivo:
+{df.head().to_string()}
+\n\n"
+    prompt = contexto + pregunta
+
+    response = openai.ChatCompletion.create(
+        model="gpt-4",
+        messages=[{"role": "system", "content": "Eres un asistente experto en análisis de datos de Excel."},
+                  {"role": "user", "content": prompt}]
+    )
+    return response["choices"][0]["message"]["content"]
+
+# Interfaz de usuario con Streamlit
+st.title("Copiloto de Informes en Excel 📊")
+
+archivo = st.file_uploader("Sube un archivo Excel", type=["xlsx"])
+if archivo:
+    df = leer_excel(archivo)
+    st.write("Vista previa de los datos:")
+    st.write(df.head())
+
+    pregunta = st.text_input("Haz una pregunta sobre los datos:")
+    if st.button("Consultar"):
+        respuesta = preguntar_a_gpt(pregunta, df)
+        st.write("Respuesta:", respuesta)
 
